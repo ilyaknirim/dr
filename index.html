@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📏 HC-SR04: 7 инженерных экспериментов</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: #f5f7fa;
+            color: #1e2b3c;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+            line-height: 1.6;
+        }
+        h1 {
+            background: #1a4d5e;
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 0 #0e2f3a;
+            font-weight: 500;
+            letter-spacing: 1px;
+            border-left: 12px solid #4ecdc4;
+        }
+        h2 {
+            background: #2c5f6e;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            margin-top: 45px;
+            font-weight: 400;
+            border-bottom: 4px solid #4ecdc4;
+            display: inline-block;
+        }
+        h3 {
+            color: #1a4d5e;
+            font-weight: 600;
+            border-left: 6px solid #4ecdc4;
+            padding-left: 18px;
+            margin: 30px 0 20px;
+        }
+        .exp {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .scheme-box {
+            background: #e0f2f1;
+            border: 2px solid #4ecdc4;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #1a4d5e;
+            border-left: 8px solid #00897b;
+        }
+        .code-block {
+            background: #0f1a24;
+            color: #e4f0fb;
+            padding: 22px;
+            border-radius: 14px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 25px 0;
+            border-left: 8px solid #4ecdc4;
+        }
+        .fact {
+            background: #e0f2f1;
+            border-left: 8px solid #00897b;
+            border-radius: 12px;
+            padding: 18px 25px;
+            margin: 20px 0;
+            font-size: 1.05em;
+        }
+        .warning {
+            background: #ffefed;
+            border-left: 8px solid #d32f2f;
+            border-radius: 12px;
+            padding: 18px 25px;
+        }
+        .pin-reference {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            background: #1a4d5e;
+            color: white;
+            padding: 25px;
+            border-radius: 16px;
+            margin: 30px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+        }
+        td, th {
+            border: 1px solid #b2dfdb;
+            padding: 14px;
+            text-align: left;
+        }
+        th {
+            background: #00897b;
+            color: white;
+        }
+        .formula {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            border-radius: 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: center;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📏 ДАТЧИК РАССТОЯНИЯ HC-SR04 · 7 ИНЖЕНЕРНЫХ ЭКСПЕРИМЕНТОВ</h1>
+
+<p style="font-size: 1.3em; background: white; padding: 20px; border-radius: 12px; border-left: 12px solid #4ecdc4;">
+    Принцип работы: датчик посылает ультразвуковой импульс (40 кГц) и засекает время возвращения эха. 
+    Расстояние = (время * скорость звука) / 2. Скорость звука в воздухе ≈ 343 м/с (зависит от температуры).
+</p>
+
+<div class="formula">
+    📐 Расстояние (см) = (длительность импульса в микросекундах) / 58
+</div>
+
+<!-- ============== БАЗОВАЯ СХЕМА ============== -->
+<div class="pin-reference">
+    <div style="grid-column: 1/-1; margin-bottom: 15px; text-align: center;">
+        <span style="background: #4ecdc4; color: #1a4d5e; padding: 12px 30px; border-radius: 40px; font-weight: 700; font-size: 1.2em;">🔌 БАЗОВОЕ ПОДКЛЮЧЕНИЕ (все эксперименты)</span>
+    </div>
+    <div><span style="background: #d32f2f; color: white; padding: 5px 12px; border-radius: 20px;">VCC</span> → 5V (питание)</div>
+    <div><span style="background: #2e7d32; color: white; padding: 5px 12px; border-radius: 20px;">GND</span> → GND (земля)</div>
+    <div><span style="background: #ffb300; color: black; padding: 5px 12px; border-radius: 20px;">Trig</span> → D9 (пусковой сигнал)</div>
+    <div><span style="background: #2196f3; color: white; padding: 5px 12px; border-radius: 20px;">Echo</span> → D10 (вход эха)</div>
+    
+    <div style="grid-column: 1/-1; margin-top: 20px; background: #0e2f3a; padding: 20px; border-radius: 12px;">
+        <strong>⚠️ ВАЖНО:</strong> Выход Echo даёт 5В, что безопасно для Arduino. Но если используете длинные провода, добавьте резистор 1 кОм между Echo и землёй для помехозащиты.
+    </div>
+</div>
+
+<!-- ============== ИНСТРУКЦИЯ ПО СОЗДАНИЮ СХЕМ ============== -->
+<h2>🛠️ КАК СОЗДАТЬ СХЕМЫ В CIRKIT DESIGNER</h2>
+<div class="exp">
+    <ol style="font-size: 1.1em;">
+        <li><strong>Зайдите на <a href="https://app.cirkitdesigner.com" target="_blank">app.cirkitdesigner.com</a></strong> (бесплатно, без регистрации)</li>
+        <li><strong>Нажмите "New Circuit"</strong></li>
+        <li><strong>Добавьте компоненты</strong> из левой панели (Search → "Arduino Uno", "HC-SR04", "LED" и т.д.)</li>
+        <li><strong>Соедините провода</strong> по таблицам ниже (просто тащите от пина к пину)</li>
+        <li><strong>Нажмите "Share" → "Copy embed link"</strong> — получите ссылку для вставки в HTML</li>
+    </ol>
+    <p>⏱️ На каждую схему уйдёт 3-5 минут. Всего ~30 минут на весь проект.</p>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 1 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 1 · ИЗМЕРЕНИЕ РАССТОЯНИЯ</h2>
+<div class="exp">
+    <h3>pulseIn() · Конвертация времени в сантиметры</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 1: Базовое подключение HC-SR04</strong><br>
+        Компоненты: Arduino Uno, HC-SR04<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>HC-SR04</th><th>Arduino</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>Trig</td><td>D9</td></tr>
+            <tr><td>Echo</td><td>D10</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_01_basic.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 1: Базовое измерение расстояния
+// Формула: расстояние (см) = время (мкс) / 58
+
+#define TRIG_PIN 9
+#define ECHO_PIN 10
+
+void setup() {
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  Serial.begin(9600);
+  Serial.println("=== HC-SR04: ИЗМЕРЕНИЕ РАССТОЯНИЯ ===");
+}
+
+void loop() {
+  // Посылаем короткий импульс 10 мкс
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  
+  // Измеряем длительность эхо-импульса (в микросекундах)
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  
+  // Конвертируем в расстояние (см)
+  int distance = duration / 58;  // 58 = 2 * 10000 / 343 (грубо)
+  
+  Serial.print("Время: ");
+  Serial.print(duration);
+  Serial.print(" мкс | Расстояние: ");
+  Serial.print(distance);
+  Serial.println(" см");
+  
+  delay(500);
+}
+    </div>
+
+    <div class="fact">
+        🔬 <strong>ФАКТ О КОДЕ:</strong> <code>pulseIn()</code> ждёт изменения сигнала и засекает время с точностью до микросекунды. Это аппаратная функция — она не использует прерывания и может блокировать программу на время ожидания (до 1 секунды). Для движущихся объектов лучше использовать прерывания, но pulseIn() проще для старта .
+    </div>
+    
+    <div class="fact">
+        📊 <strong>ФИЗИКА ПРОЦЕССА:</strong> Звук проходит расстояние до объекта и обратно. Поэтому время делим на 2. Скорость звука зависит от температуры: v = 331 + 0.6 * T(°C) м/с. При 20°C это 343 м/с. Коэффициент 58 получен как: 10000 / (343/2) ≈ 58.3 .
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 2 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 2 · СВЕТОФОР РАССТОЯНИЯ</h2>
+<div class="exp">
+    <h3>Трёхцветная индикация · Пороговые значения</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 2: HC-SR04 + 3 светодиода</strong><br>
+        Компоненты: Arduino Uno, HC-SR04, 3 светодиода (зелёный, жёлтый, красный), резисторы 220Ω (3 шт)<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>HC-SR04</th><th>Arduino</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>Trig</td><td>D9</td></tr>
+            <tr><td>Echo</td><td>D10</td></tr>
+            <tr><th colspan="2">Светодиоды</th></tr>
+            <tr><td>🟢 Зелёный (+) → 220Ω</td><td>D11</td></tr>
+            <tr><td>🟡 Жёлтый (+) → 220Ω</td><td>D12</td></tr>
+            <tr><td>🔴 Красный (+) → 220Ω</td><td>D13</td></tr>
+            <tr><td>Все катоды (-)</td><td>GND</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_02_traffic_light.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 2: Светофор расстояния
+// Зелёный: далеко (> 100 см)
+// Жёлтый: близко (30-100 см)
+// Красный: опасно близко (< 30 см)
+
+#define TRIG 9
+#define ECHO 10
+#define GREEN 11
+#define YELLOW 12
+#define RED 13
+
+void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  pinMode(GREEN, OUTPUT);
+  pinMode(YELLOW, OUTPUT);
+  pinMode(RED, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Измеряем расстояние
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  
+  long duration = pulseIn(ECHO, HIGH);
+  int distance = duration / 58;
+  
+  // Управление светодиодами
+  if (distance > 100) {
+    digitalWrite(GREEN, HIGH);
+    digitalWrite(YELLOW, LOW);
+    digitalWrite(RED, LOW);
+    Serial.println("🟢 ДАЛЕКО");
+  }
+  else if (distance > 30) {
+    digitalWrite(GREEN, LOW);
+    digitalWrite(YELLOW, HIGH);
+    digitalWrite(RED, LOW);
+    Serial.println("🟡 БЛИЗКО");
+  }
+  else {
+    digitalWrite(GREEN, LOW);
+    digitalWrite(YELLOW, LOW);
+    digitalWrite(RED, HIGH);
+    Serial.println("🔴 ОПАСНО!");
+  }
+  
+  delay(200);
+}
+    </div>
+
+    <div class="fact">
+        🚦 <strong>ПРИМЕНЕНИЕ:</strong> Точно так работают парктроники в автомобилях. Разница только в количестве датчиков (обычно 4-8) и звуковой индикации. Частота писка увеличивается при приближении к препятствию.
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 3 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 3 · ЗВУКОВОЙ ПАРКТРОНИК</h2>
+<div class="exp">
+    <h3>Частота писка ~ расстояние · tone()</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 3: HC-SR04 + зуммер</strong><br>
+        Компоненты: Arduino Uno, HC-SR04, активный или пассивный зуммер<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>HC-SR04</th><th>Arduino</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>Trig</td><td>D9</td></tr>
+            <tr><td>Echo</td><td>D10</td></tr>
+            <tr><th colspan="2">Зуммер</th></tr>
+            <tr><td>+ (длинная ножка)</td><td>D8</td></tr>
+            <tr><td>- (короткая)</td><td>GND</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_03_parking_sensor.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 3: Звуковой парктроник
+// Чем ближе объект, тем чаще писк
+
+#define TRIG 9
+#define ECHO 10
+#define BUZZER 8
+
+void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  pinMode(BUZZER, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Измерение
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  
+  long duration = pulseIn(ECHO, HIGH);
+  int distance = duration / 58;
+  
+  // Ограничиваем до 200 см (дальше не интересно)
+  if (distance > 200) distance = 200;
+  
+  if (distance < 100) {
+    // Пищим с частотой, обратной расстоянию
+    int beepDelay = map(distance, 10, 100, 50, 500);
+    beepDelay = constrain(beepDelay, 50, 500);
+    
+    tone(BUZZER, 2000, 50);  // Частота 2 кГц, длительность 50 мс
+    delay(beepDelay);
+  } else {
+    delay(100);
+  }
+  
+  Serial.print("Расстояние: ");
+  Serial.print(distance);
+  Serial.print(" см | Задержка: ");
+  Serial.println(map(distance, 10, 100, 50, 500));
+}
+    </div>
+
+    <div class="fact">
+        🔊 <strong>ФАКТ О TONE():</strong> Функция <code>tone(pin, frequency, duration)</code> генерирует меандр заданной частоты на пине. Важно: на пинах 3 и 11 используется тот же таймер, что и для analogWrite() на этих пинах — они не могут работать одновременно .
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 4 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 4 · УЛЬТРАЗВУКОВОЙ РАДАР</h2>
+<div class="exp">
+    <h3>Сервопривод + дальномер = сканирование</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 4: HC-SR04 на сервоприводе</strong><br>
+        Компоненты: Arduino Uno, HC-SR04, сервопривод<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>HC-SR04</th><th>Arduino</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>Trig</td><td>D9</td></tr>
+            <tr><td>Echo</td><td>D10</td></tr>
+            <tr><th colspan="2">Сервопривод</th></tr>
+            <tr><td>Сигнал (жёлтый)</td><td>D11</td></tr>
+            <tr><td>+5V (красный)</td><td>5V</td></tr>
+            <tr><td>GND (чёрный)</td><td>GND</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_04_radar.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 4: Ультразвуковой радар
+// Сканирует пространство от 0 до 180 градусов
+
+#include <Servo.h>
+
+#define TRIG 9
+#define ECHO 10
+#define SERVO_PIN 11
+
+Servo myServo;
+int angle;
+
+void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  myServo.attach(SERVO_PIN);
+  Serial.begin(9600);
+  Serial.println("Angle,Distance");
+}
+
+void loop() {
+  // Сканируем слева направо
+  for (angle = 15; angle <= 165; angle++) {
+    myServo.write(angle);
+    delay(30);  // Ждём, пока сервопривод повернётся
+    
+    int distance = getDistance();
+    
+    // Выводим в формате для Processing (CSV)
+    Serial.print(angle);
+    Serial.print(",");
+    Serial.println(distance);
+  }
+  
+  // Сканируем справа налево
+  for (angle = 165; angle >= 15; angle--) {
+    myServo.write(angle);
+    delay(30);
+    
+    int distance = getDistance();
+    
+    Serial.print(angle);
+    Serial.print(",");
+    Serial.println(distance);
+  }
+}
+
+int getDistance() {
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  
+  long duration = pulseIn(ECHO, HIGH, 30000);  // Таймаут 30 мс
+  if (duration == 0) return 400;  // Нет объекта
+  
+  int distance = duration / 58;
+  return distance;
+}
+    </div>
+
+    <div class="fact">
+        🛰️ <strong>ФАКТ О СКАНИРОВАНИИ:</strong> Данные из этого эксперимента можно визуализировать в Processing (см. официальный пример "Radar"). В реальных радарах (например, в автомобилях) используется несколько лучей или фазированная решётка, но принцип тот же — времяпролётный метод .
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 5 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 5 · LCD-ДИСПЛЕЙ (I2C)</h2>
+<div class="exp">
+    <h3>Вывод расстояния на экран · Графическая шкала</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 5: HC-SR04 + LCD I2C</strong><br>
+        Компоненты: Arduino Uno, HC-SR04, LCD 16x2 I2C<br>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>HC-SR04</th><th>Arduino</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>Trig</td><td>D9</td></tr>
+            <tr><td>Echo</td><td>D10</td></tr>
+            <tr><th colspan="2">LCD I2C</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>SDA</td><td>A4</td></tr>
+            <tr><td>SCL</td><td>A5</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_05_lcd.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 5: Вывод расстояния на LCD
+// + графическая шкала из символов █
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define TRIG 9
+#define ECHO 10
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Distance:");
+  
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Измерение
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  
+  long duration = pulseIn(ECHO, HIGH, 30000);
+  int distance = duration / 58;
+  if (distance > 400) distance = 400;
+  
+  // Вывод на LCD (первая строка)
+  lcd.setCursor(0, 0);
+  lcd.print("Distance: ");
+  lcd.print(distance);
+  lcd.print("cm   ");
+  
+  // Графическая шкала (вторая строка)
+  lcd.setCursor(0, 1);
+  int bars = map(distance, 0, 200, 16, 0);
+  bars = constrain(bars, 0, 16);
+  
+  for (int i = 0; i < bars; i++) lcd.print("█");
+  for (int i = bars; i < 16; i++) lcd.print("░");
+  
+  Serial.print("Расстояние: ");
+  Serial.println(distance);
+  
+  delay(100);
+}
+    </div>
+
+    <div class="fact">
+        📟 <strong>СИМВОЛЫ В LCD:</strong> Символы "█" (полный блок) и "░" (лёгкая заливка) есть в стандартном знакогенераторе. Можно создавать свои символы через <code>lcd.createChar()</code> для анимированных индикаторов .
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 6 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 6 · ИЗМЕРИТЕЛЬ ОБЪЁМА</h2>
+<div class="exp">
+    <h3>Площадь × высота = объём жидкости</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 6: HC-SR04 над ёмкостью</strong><br>
+        Компоненты: Arduino Uno, HC-SR04<br>
+        <p><strong>Монтаж:</strong> Закрепите датчик над ёмкостью так, чтобы он смотрел вертикально вниз на поверхность воды.</p>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>HC-SR04</th><th>Arduino</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>Trig</td><td>D9</td></tr>
+            <tr><td>Echo</td><td>D10</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_06_volume.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 6: Измерение объёма жидкости
+// Датчик сверху, измеряем расстояние до поверхности
+
+#define TRIG 9
+#define ECHO 10
+
+// Константы вашей ёмкости
+const float TANK_HEIGHT = 30.0;     // Высота ёмкости (см)
+const float TANK_AREA = 200.0;      // Площадь основания (см²)
+const float SENSOR_OFFSET = 5.0;    // Расстояние от датчика до края ёмкости (см)
+
+void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  Serial.begin(9600);
+  Serial.println("=== ИЗМЕРИТЕЛЬ ОБЪЁМА ===");
+}
+
+void loop() {
+  // Измеряем расстояние до воды
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  
+  long duration = pulseIn(ECHO, HIGH, 30000);
+  float distanceToWater = duration / 58.0;  // см
+  
+  // Вычисляем высоту воды
+  float waterHeight = TANK_HEIGHT - (distanceToWater - SENSOR_OFFSET);
+  if (waterHeight < 0) waterHeight = 0;
+  if (waterHeight > TANK_HEIGHT) waterHeight = TANK_HEIGHT;
+  
+  // Объём = площадь * высота
+  float volume = TANK_AREA * waterHeight;  // см³ = мл
+  
+  Serial.print("Расстояние до воды: ");
+  Serial.print(distanceToWater);
+  Serial.print(" см | Высота воды: ");
+  Serial.print(waterHeight);
+  Serial.print(" см | Объём: ");
+  Serial.print(volume);
+  Serial.println(" мл");
+  
+  delay(1000);
+}
+    </div>
+
+    <div class="fact">
+        💧 <strong>ПРИМЕНЕНИЕ:</strong> Этот метод используется в промышленных резервуарах, но с ультразвуковыми уровнемерами (например, Siemens SITRANS). Точность зависит от формы ёмкости: для цилиндра формула сложнее (V = πr²h) .
+    </div>
+</div>
+
+<!-- ============== ЭКСПЕРИМЕНТ 7 ============== -->
+<h2>📌 ЭКСПЕРИМЕНТ 7 · РОБОТ, ОБХОДЯЩИЙ ПРЕПЯТСТВИЯ</h2>
+<div class="exp">
+    <h3>Двухколёсная платформа + дальномер</h3>
+    
+    <div class="scheme-box">
+        <strong>🔧 СХЕМА 7: Робот с избеганием препятствий</strong><br>
+        Компоненты: Arduino Uno, HC-SR04, motor driver L293D, 2 мотора с колёсами, батарейный отсек<br>
+        <p><em>Сложная схема — в Cirkit Designer есть готовый шаблон "Robot Car".</em></p>
+        <table style="margin-top: 15px; background: transparent;">
+            <tr><th>HC-SR04</th><th>Arduino</th></tr>
+            <tr><td>VCC</td><td>5V</td></tr>
+            <tr><td>GND</td><td>GND</td></tr>
+            <tr><td>Trig</td><td>D9</td></tr>
+            <tr><td>Echo</td><td>D10</td></tr>
+            <tr><th colspan="2">L293D (Motor Driver)</th></tr>
+            <tr><td>Enable 1,2</td><td>D5</td></tr>
+            <tr><td>Input 1</td><td>D6</td></tr>
+            <tr><td>Input 2</td><td>D7</td></tr>
+            <tr><td>Input 3</td><td>D8</td></tr>
+            <tr><td>Input 4</td><td>D11</td></tr>
+            <tr><td>Enable 3,4</td><td>D12</td></tr>
+        </table>
+        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_07_robot.circuit</code></p>
+    </div>
+
+    <div class="code-block">
+// ЭКСПЕРИМЕНТ 7: Робот, объезжающий препятствия
+
+#define TRIG 9
+#define ECHO 10
+
+// Пины моторов (L293D)
+#define EN1 5    // Enable левого мотора
+#define IN1 6    // Input 1
+#define IN2 7    // Input 2
+#define IN3 8    // Input 3
+#define IN4 11   // Input 4
+#define EN2 12   // Enable правого мотора
+
+int speed = 150;  // Скорость 0-255
+
+void setup() {
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+  
+  pinMode(EN1, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(EN2, OUTPUT);
+  
+  Serial.begin(9600);
+}
+
+void loop() {
+  int distance = getDistance();
+  Serial.print("Расстояние: ");
+  Serial.println(distance);
+  
+  if (distance > 30) {
+    // Свободно - едем вперёд
+    forward();
+  } else {
+    // Препятствие - поворачиваем
+    stop();
+    delay(300);
+    backward();
+    delay(300);
+    stop();
+    turnRight();
+    delay(400);
+  }
+}
+
+int getDistance() {
+  digitalWrite(TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG, LOW);
+  
+  long duration = pulseIn(ECHO, HIGH, 30000);
+  return duration / 58;
+}
+
+void forward() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  analogWrite(EN1, speed);
+  analogWrite(EN2, speed);
+}
+
+void backward() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  analogWrite(EN1, speed);
+  analogWrite(EN2, speed);
+}
+
+void turnRight() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  analogWrite(EN1, speed);
+  analogWrite(EN2, speed);
+}
+
+void stop() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+  analogWrite(EN1, 0);
+  analogWrite(EN2, 0);
+}
+    </div>
+
+    <div class="fact">
+        🤖 <strong>ФАКТ О РОБОТАХ:</strong> Алгоритм "избегание препятствий" — основа поведения многих роботов (пылесосы Roomba, газонокосилки). В реальных устройствах используют несколько датчиков и более сложную логику (например, алгоритм Bug или потенциалы поля) .
+    </div>
+</div>
+
+<!-- ============== ТАБЛИЦА КОМПОНЕНТОВ ============== -->
+<h2>📋 СПЕЦИФИКАЦИЯ КОМПОНЕНТОВ</h2>
+<div class="exp">
+    <table>
+        <tr>
+            <th>Компонент</th>
+            <th>Назначение</th>
+            <th>Подключение</th>
+            <th>Примечание</th>
+        </tr>
+        <tr>
+            <td>📏 HC-SR04</td>
+            <td>Измерение расстояния</td>
+            <td>VCC→5V, GND→GND, Trig→D9, Echo→D10</td>
+            <td>Дальность 2–400 см, угол 15°</td>
+        </tr>
+        <tr>
+            <td>🔄 Сервопривод</td>
+            <td>Поворот датчика</td>
+            <td>Сигнал→D11, +5V, GND</td>
+            <td>Для радара</td>
+        </tr>
+        <tr>
+            <td>💡 Светодиоды (3)</td>
+            <td>Индикация зон</td>
+            <td>Аноды→D11-13 через 220Ω, катоды→GND</td>
+            <td>Цвета: зелёный, жёлтый, красный</td>
+        </tr>
+        <tr>
+            <td>🔊 Зуммер</td>
+            <td>Звуковая индикация</td>
+            <td>+→D8, -→GND</td>
+            <td>Активный или пассивный</td>
+        </tr>
+        <tr>
+            <td>📟 LCD I2C</td>
+            <td>Вывод информации</td>
+            <td>VCC→5V, GND→GND, SDA→A4, SCL→A5</td>
+            <td>Адрес 0x27 или 0x3F</td>
+        </tr>
+        <tr>
+            <td>⚙️ L293D + моторы</td>
+            <td>Движение робота</td>
+            <td>По таблице в эксперименте 7</td>
+            <td>Требуется внешнее питание</td>
+        </tr>
+    </table>
+</div>
+
+<!-- ============== СПИСОК ФАЙЛОВ СХЕМ ============== -->
+<h2>📁 ФАЙЛЫ СХЕМ ДЛЯ CIRKIT DESIGNER</h2>
+<div class="exp">
+    <table>
+        <tr><th>Эксперимент</th><th>Имя файла</th><th>Компоненты</th></tr>
+        <tr><td>Базовое подключение</td><td><code>distance_00_base.circuit</code></td><td>HC-SR04 + Arduino</td></tr>
+        <tr><td>Эксперимент 1</td><td><code>distance_01_basic.circuit</code></td><td>HC-SR04 + Arduino</td></tr>
+        <tr><td>Эксперимент 2</td><td><code>distance_02_traffic_light.circuit</code></td><td>HC-SR04 + 3 светодиода</td></tr>
+        <tr><td>Эксперимент 3</td><td><code>distance_03_parking_sensor.circuit</code></td><td>HC-SR04 + зуммер</td></tr>
+        <tr><td>Эксперимент 4</td><td><code>distance_04_radar.circuit</code></td><td>HC-SR04 + сервопривод</td></tr>
+        <tr><td>Эксперимент 5</td><td><code>distance_05_lcd.circuit</code></td><td>HC-SR04 + LCD I2C</td></tr>
+        <tr><td>Эксперимент 6</td><td><code>distance_06_volume.circuit</code></td><td>HC-SR04 (вертикально)</td></tr>
+        <tr><td>Эксперимент 7</td><td><code>distance_07_robot.circuit</code></td><td>HC-SR04 + L293D + 2 мотора</td></tr>
+    </table>
+</div>
+
+<!-- ============== ИНЖЕНЕРНЫЕ ЗАДАЧИ ============== -->
+<h2>📌 ЗАДАЧИ ДЛЯ САМОСТОЯТЕЛЬНОЙ РАБОТЫ</h2>
+<div class="exp">
+    <div style="background: #f5f5f5; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+        <strong style="font-size: 1.2em;">🔹 Уровень 1 (базовый)</strong>
+        <ul style="margin-top: 12px;">
+            <li>Добавить температурную компенсацию (использовать датчик температуры)</li>
+            <li>Сделать "шумомер" — выводить расстояние, но если объект движется быстро — мигать</li>
+            <li>Реализовать фильтр скользящего среднего для стабилизации показаний</li>
+        </ul>
+    </div>
+    
+    <div style="background: #e0f2f1; padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+        <strong style="font-size: 1.2em;">🔸 Уровень 2 (средний)</strong>
+        <ul style="margin-top: 12px;">
+            <li>Сделать два датчика для измерения ширины прохода</li>
+            <li>Реализовать режим "охрана" — если расстояние меняется быстро, включать сирену</li>
+            <li>Построить 3D-карту комнаты (серво + датчик + запись в EEPROM)</li>
+        </ul>
+    </div>
+    
+    <div style="background: #c8e6c9; padding: 20px; border-radius: 12px;">
+        <strong style="font-size: 1.2em;">🔹 Уровень 3 (продвинутый)</strong>
+        <ul style="margin-top: 12px;">
+            <li>Использовать прерывания вместо pulseIn() для более быстрой реакции</li>
+            <li>Сделать ультразвуковой дальномер с интерфейсом Bluetooth (HC-05)</li>
+            <li>Реализовать алгоритм слежения за объектом (серво + датчик)</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ============== РЕАЛЬНЫЕ ПРИМЕНЕНИЯ ============== -->
+<h2>🏭 РЕАЛЬНЫЕ ПРИМЕНЕНИЯ УЛЬТРАЗВУКА</h2>
+<div class="exp">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div style="background: white; border-left: 6px solid #00897b; padding: 18px; border-radius: 8px;">
+            <strong>🅿️ Автомобильные парктроники</strong><br>
+            4-8 датчиков в бамперах измеряют расстояние до препятствий, частота писка увеличивается при приближении.
+        </div>
+        <div style="background: white; border-left: 6px solid #00897b; padding: 18px; border-radius: 8px;">
+            <strong>🏭 Промышленные уровнемеры</strong><br>
+            Контроль уровня сыпучих материалов или жидкостей в резервуарах высотой до 60 метров.
+        </div>
+        <div style="background: white; border-left: 6px solid #00897b; padding: 18px; border-radius: 8px;">
+            <strong>🤖 Роботы-пылесосы</strong><br>
+            Обнаружение препятствий, стен, определение высоты (чтобы не упасть с лестницы).
+        </div>
+        <div style="background: white; border-left: 6px solid #00897b; padding: 18px; border-radius: 8px;">
+            <strong>📸 Автофокус в камерах</strong><br>
+            Некоторые старые камеры использовали ультразвук для определения расстояния до объекта.
+        </div>
+        <div style="background: white; border-left: 6px solid #00897b; padding: 18px; border-radius: 8px;">
+            <strong>🚪 Автоматические двери</strong><br>
+            Датчики движения часто используют ультразвук для обнаружения приближающегося человека.
+        </div>
+        <div style="background: white; border-left: 6px solid #00897b; padding: 18px; border-radius: 8px;">
+            <strong>🦇 Бионика</strong><br>
+            Летучие мыши используют эхолокацию для ориентации в пространстве — тот же принцип.
+        </div>
+    </div>
+</div>
+
+<!-- ============== ЗАКЛЮЧЕНИЕ ============== -->
+<div style="background: linear-gradient(145deg, #1a4d5e, #0e2f3a); color: white; padding: 40px; border-radius: 16px; margin-top: 50px;">
+    <h2 style="background: none; color: #4ecdc4; border: none; padding: 0; margin-top: 0; display: block;">📌 ВЫВОДЫ</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <div>
+            <p style="font-size: 1.2em; margin-bottom: 20px;">Что вы изучили:</p>
+            <ul style="list-style-type: none; padding-left: 0;">
+                <li style="margin-bottom: 12px;">✓ Измерение времени импульса (pulseIn)</li>
+                <li style="margin-bottom: 12px;">✓ Конвертация время → расстояние</li>
+                <li style="margin-bottom: 12px;">✓ Пороговая индикация (светофор)</li>
+                <li style="margin-bottom: 12px;">✓ Звуковая сигнализация (tone)</li>
+                <li style="margin-bottom: 12px;">✓ Сканирование с сервоприводом</li>
+                <li style="margin-bottom: 12px;">✓ Вывод на LCD + графика</li>
+                <li style="margin-bottom: 12px;">✓ Измерение объёма жидкости</li>
+                <li style="margin-bottom: 12px;">✓ Робот с избеганием препятствий</li>
+            </ul>
+        </div>
+        <div>
+            <p style="font-size: 1.2em; margin-bottom: 20px;">Дальнейшие темы:</p>
+            <ul style="list-style-type: none; padding-left: 0;">
+                <li style="margin-bottom: 12px;">➡ Несколько датчиков (триангуляция)</li>
+                <li style="margin-bottom: 12px;">➡ Обработка сигналов (FFT, фильтры)</li>
+                <li style="margin-bottom: 12px;">➡ 3D-сканирование с шаговыми двигателями</li>
+                <li style="margin-bottom: 12px;">➡ Ультразвуковая связь (передача данных)</li>
+            </ul>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 30px; background: rgba(78,205,196,0.15); padding: 20px; border-radius: 12px;">
+        <span style="font-size: 1.2em;">📁 Все схемы: distance_*.circuit в Cirkit Designer</span>
+    </div>
+</div>
+
+</body>
+</html>
