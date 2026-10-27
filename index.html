@@ -152,18 +152,7 @@
     </div>
 </div>
 
-<!-- ============== ИНСТРУКЦИЯ ПО СОЗДАНИЮ СХЕМ ============== -->
-<h2>🛠️ КАК СОЗДАТЬ СХЕМЫ В CIRKIT DESIGNER</h2>
-<div class="exp">
-    <ol style="font-size: 1.1em;">
-        <li><strong>Зайдите на <a href="https://app.cirkitdesigner.com" target="_blank">app.cirkitdesigner.com</a></strong> (бесплатно, без регистрации)</li>
-        <li><strong>Нажмите "New Circuit"</strong></li>
-        <li><strong>Добавьте компоненты</strong> из левой панели (Search → "Arduino Uno", "HC-SR04", "LED" и т.д.)</li>
-        <li><strong>Соедините провода</strong> по таблицам ниже (просто тащите от пина к пину)</li>
-        <li><strong>Нажмите "Share" → "Copy embed link"</strong> — получите ссылку для вставки в HTML</li>
-    </ol>
-    <p>⏱️ На каждую схему уйдёт 3-5 минут. Всего ~30 минут на весь проект.</p>
-</div>
+
 
 <!-- ============== ЭКСПЕРИМЕНТ 1 ============== -->
 <h2>📌 ЭКСПЕРИМЕНТ 1 · ИЗМЕРЕНИЕ РАССТОЯНИЯ</h2>
@@ -180,7 +169,6 @@
             <tr><td>Trig</td><td>D9</td></tr>
             <tr><td>Echo</td><td>D10</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_01_basic.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -250,7 +238,6 @@ void loop() {
             <tr><td>🔴 Красный (+) → 220Ω</td><td>D13</td></tr>
             <tr><td>Все катоды (-)</td><td>GND</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_02_traffic_light.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -332,7 +319,6 @@ void loop() {
             <tr><td>+ (длинная ножка)</td><td>D8</td></tr>
             <tr><td>- (короткая)</td><td>GND</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_03_parking_sensor.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -406,14 +392,13 @@ void loop() {
             <tr><td>+5V (красный)</td><td>5V</td></tr>
             <tr><td>GND (чёрный)</td><td>GND</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_04_radar.circuit</code></p>
     </div>
 
     <div class="code-block">
 // ЭКСПЕРИМЕНТ 4: Ультразвуковой радар
 // Сканирует пространство от 0 до 180 градусов
 
-#include <Servo.h>
+#include &lt;Servo.h&gt;
 
 #define TRIG 9
 #define ECHO 10
@@ -497,15 +482,14 @@ int getDistance() {
             <tr><td>SDA</td><td>A4</td></tr>
             <tr><td>SCL</td><td>A5</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_05_lcd.circuit</code></p>
     </div>
 
     <div class="code-block">
 // ЭКСПЕРИМЕНТ 5: Вывод расстояния на LCD
 // + графическая шкала из символов █
 
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+#include &lt;Wire.h&gt;
+#include &lt;LiquidCrystal_I2C.h&gt;
 
 #define TRIG 9
 #define ECHO 10
@@ -578,7 +562,6 @@ void loop() {
             <tr><td>Trig</td><td>D9</td></tr>
             <tr><td>Echo</td><td>D10</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_06_volume.circuit</code></p>
     </div>
 
     <div class="code-block">
@@ -659,7 +642,6 @@ void loop() {
             <tr><td>Input 4</td><td>D11</td></tr>
             <tr><td>Enable 3,4</td><td>D12</td></tr>
         </table>
-        <p style="margin-top: 15px;">💾 Сохраните как: <code>distance_07_robot.circuit</code></p>
     </div>
 
     <div class="code-block">
